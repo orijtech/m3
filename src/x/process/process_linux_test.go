@@ -91,6 +91,7 @@ func verifyNumFDsWithinMarginOfError(t *testing.T, expected, actual int) {
 }
 
 func BenchmarkNumFDs(b *testing.B) {
+        b.Skip("Faulty benchmark on Linux per https://github.com/m3db/m3/issues/3798")
 	var (
 		// Low for C.I and local testing, bump this up to a much larger number
 		// when performing actual benchmarking.
