@@ -32,7 +32,7 @@ import (
 	"github.com/m3db/m3/src/x/test/testmarshal"
 
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -172,7 +172,8 @@ func TestPipelineString(t *testing.T) {
 					},
 				},
 			},
-			expected: "{operations: [{aggregation: Last}, {transformation: PerSecond}, {rollup: {name: foo, tags: [tag1, tag2], aggregation: Sum}}]}",
+			expected: "{operations: [{aggregation: Last}, {transformation: PerSecond}, " +
+				"{rollup: {name: foo, type: 0, tags: [tag1, tag2], aggregation: Sum}}]}",
 		},
 		{
 			p: Pipeline{
@@ -199,18 +200,13 @@ func TestTransformationOpToProto(t *testing.T) {
 
 func TestTransformationOpFromProto(t *testing.T) {
 	var res TransformationOp
-	require.NoError(t, res.FromProto(&testTransformationOpProto))
+	require.NoError(t, res.FromProto(testTransformationOpProto))
 	require.Equal(t, testTransformationOp, res)
-}
-
-func TestTransformationOpFromProtoNilProto(t *testing.T) {
-	var res TransformationOp
-	require.Equal(t, errNilTransformationOpProto, res.FromProto(nil))
 }
 
 func TestTransformationOpFromProtoBadProto(t *testing.T) {
 	var res TransformationOp
-	require.Error(t, res.FromProto(&testBadTransformationOpProto))
+	require.Error(t, res.FromProto(testBadTransformationOpProto))
 }
 
 func TestTransformationOpRoundTrip(t *testing.T) {
@@ -219,7 +215,7 @@ func TestTransformationOpRoundTrip(t *testing.T) {
 		res TransformationOp
 	)
 	require.NoError(t, testTransformationOp.ToProto(&pb))
-	require.NoError(t, res.FromProto(&pb))
+	require.NoError(t, res.FromProto(pb))
 	require.Equal(t, testTransformationOp, res)
 }
 
@@ -318,12 +314,13 @@ func TestOpUnionMarshalJSON(t *testing.T) {
 			op: OpUnion{
 				Type: RollupOpType,
 				Rollup: RollupOp{
+					Type:          ExcludeByRollupType,
 					newName:       b("testRollup"),
 					Tags:          bs("tag1", "tag2"),
 					AggregationID: aggregation.MustCompressTypes(aggregation.Min, aggregation.Max),
 				},
 			},
-			expected: `{"rollup":{"type":0,"newName":"testRollup","tags":["tag1","tag2"],"aggregation":["Min","Max"]}}`,
+			expected: `{"rollup":{"type":1,"newName":"testRollup","tags":["tag1","tag2"],"aggregation":["Min","Max"]}}`,
 		},
 		{
 			op: OpUnion{
